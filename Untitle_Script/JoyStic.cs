@@ -1,0 +1,63 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
+public class JoyStic : MonoBehaviour, IDragHandler, IPointerUpHandler, IPointerDownHandler
+{
+    private Image bgImg;
+    private Image joysticImg;
+    private Vector3 inputVector;
+    private Color color1 = new Color(0, 0, 0, 0),
+        color2 = new Color(72, 72, 72, 0.5f), color3 = new Color(194, 194, 194, 0.3f);
+
+    void Start()
+    {
+        bgImg = GetComponent<Image>();
+        joysticImg = transform.GetChild(0).GetComponent<Image>();
+
+        bgImg.color = color1;
+        joysticImg.color = color1;
+    }
+
+    public virtual void OnDrag(PointerEventData ped)
+    {
+        Vector2 pos;
+        if(RectTransformUtility.ScreenPointToLocalPointInRectangle(bgImg.rectTransform, ped.position, ped.pressEventCamera, out pos))
+        {
+            pos.x = (pos.x / bgImg.rectTransform.sizeDelta.x);
+            pos.y = (pos.y / bgImg.rectTransform.sizeDelta.y);
+
+            inputVector = new Vector3(pos.x * 2, pos.y * 2, 0);
+            inputVector = (inputVector.magnitude > 1.0f) ? inputVector.normalized : inputVector;
+
+            joysticImg.rectTransform.anchoredPosition = new Vector3(inputVector.x * (bgImg.rectTransform.sizeDelta.x / 3), inputVector.y * (bgImg.rectTransform.sizeDelta.y / 3));
+        }
+    }
+
+    public virtual void OnPointerDown(PointerEventData ped) // 터치하고 있을때
+    {
+        bgImg.color = color2;
+        joysticImg.color = color3;
+        OnDrag(ped);
+    }
+    
+    public virtual void OnPointerUp(PointerEventData ped) // 터치 안할때 원위치
+    {
+        bgImg.color = color1;
+        joysticImg.color = color1;
+        inputVector = Vector3.zero;
+        joysticImg.rectTransform.anchoredPosition = Vector3.zero;
+    }
+
+    public float GetHorizontalValue()
+    {
+        return inputVector.x;
+    }
+
+    public float GetVertizalValue()
+    {
+        return inputVector.y;
+    }
+}
