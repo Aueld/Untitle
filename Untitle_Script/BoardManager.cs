@@ -20,17 +20,17 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-
     public int columns = 12;
     public int rows = 8;
     public Count wallCount = new Count(10, 20);
-    public Count foodCount = new Count(2, 5);
+    public Count energyCount = new Count(2, 5);
     public GameObject exit;
     public GameObject[] floorTiles;
     public GameObject[] wallTiles;
-    public GameObject[] foodTiles;
+    public GameObject[] energyTiles;
     public GameObject[] enemyTiles;
     public GameObject[] outerWallTiles;
+    public GameObject[] boomTiles;
 
     private Transform boardHolder;
     private List<Vector3> gridPositions = new List<Vector3>();
@@ -39,10 +39,14 @@ public class BoardManager : MonoBehaviour
     {
         gridPositions.Clear();
 
-        for(int x = 1; x < columns-1; x++)
+        for(int x = 0; x < columns; x++)
         {
-            for(int y = 1; y < rows-1; y++)
+            for(int y = 0; y < rows; y++)
             {
+                if (GridGetXY(x, y, 0, 0) || GridGetXY(x, y, columns - 1, rows - 1)
+                    || GridGetXY(x, y, columns - 1, rows - 2) || GridGetXY(x, y, columns - 2, rows - 1) || GridGetXY(x, y, columns - 2, rows - 2))
+                    continue;
+
                 gridPositions.Add(new Vector3(x, y, 0f));
             }
         }
@@ -94,6 +98,14 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private bool GridGetXY(int x, int y, int numX, int numY)
+    {
+        if (x == numX && y == numY)
+            return true;
+        else
+            return false;
+    }
+
     public void SetupScene (int level)
     {
         BoardSetup();
@@ -102,12 +114,18 @@ public class BoardManager : MonoBehaviour
 
         LayoutObjectAtRandom(wallTiles, wallCount.minimum, wallCount.maximum);
 
-        LayoutObjectAtRandom(foodTiles, foodCount.minimum, foodCount.maximum);
+        LayoutObjectAtRandom(energyTiles, energyCount.minimum, energyCount.maximum);
 
-        int enemyCount = (int)Mathf.Log(level, 2f);
+        int enemyCount = (int)Mathf.Log(level, 2f) * 2;
 
         LayoutObjectAtRandom(enemyTiles, enemyCount, enemyCount);
+        LayoutObjectAtRandom(boomTiles, 0, 1);
+
+        Instantiate(wallTiles[0], new Vector3(columns - 2, rows - 2, 0f), Quaternion.identity);
+        Instantiate(wallTiles[0], new Vector3(columns - 1, rows - 2, 0f), Quaternion.identity);
+        Instantiate(wallTiles[0], new Vector3(columns - 2, rows - 1, 0f), Quaternion.identity);
 
         Instantiate(exit, new Vector3(columns - 1, rows - 1, 0f), Quaternion.identity);
+
     }
 }

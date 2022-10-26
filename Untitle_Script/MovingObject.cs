@@ -5,13 +5,12 @@ using UnityEngine;
 public abstract class MovingObject : MonoBehaviour
 {
     public float moveTime = 0.1f;
-    public LayerMask blockingLayer;
+    [SerializeField] private LayerMask blockingLayer;
 
     private BoxCollider2D boxCollider;      
     private Rigidbody2D rb2D;               
     private float inverseMoveTime;         
     private bool isMoving;                 
-    
   
     protected virtual void Start()
     {
@@ -19,7 +18,6 @@ public abstract class MovingObject : MonoBehaviour
         rb2D = GetComponent<Rigidbody2D>();
         inverseMoveTime = 10000f / moveTime;
     }
-
 
     protected bool Move(int xDir, int yDir, out RaycastHit2D hit)
     {
@@ -41,7 +39,6 @@ public abstract class MovingObject : MonoBehaviour
 
         return false;
     }
-
 
     protected IEnumerator SmoothMovement(Vector3 end)
     {

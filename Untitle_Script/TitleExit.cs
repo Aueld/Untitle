@@ -4,7 +4,15 @@ using UnityEngine;
 
 public class TitleExit : MonoBehaviour
 {
-    void Update()
+    private void Start()
+    {
+        string log;
+
+        GPGSBinder.Inst.Login((success, localUser) =>
+        log = $"{success}, {localUser.userName}, {localUser.id}, {localUser.state}, {localUser.underage}");
+    }
+
+    private void Update()
     {
         if (Application.platform == RuntimePlatform.Android)
         {

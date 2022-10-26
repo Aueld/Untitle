@@ -4,15 +4,19 @@ using UnityEngine;
 
 public class SoundManager : MonoBehaviour
 {
-    public AudioSource efxSource;
-    public AudioSource musicSource;
     public static SoundManager instance = null;
 
-    public float lowPitRange = .85f;
-    public float highPitRange = .95f;
+    // 사운드 재생 객체
+    public AudioSource[] efxSource;
+    
+    public AudioSource musicSource;
+    
+    public float lowPitRange = .55f;
+    public float highPitRange = .75f;
+    //public float volume = 0.75f;
 
-
-    void Awake()
+    // 싱글톤
+    private void Awake()
     {
         if (instance == null)
             instance = this;
@@ -22,19 +26,30 @@ public class SoundManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    // 재생
     public void PlaySingle(AudioClip clip)
     {
-        efxSource.clip = clip;
-        efxSource.Play();
+        efxSource[0].clip = clip;
+        efxSource[0].Play();
     }
 
-    public void RandomizeSfx(params AudioClip [] clips)
+    // 클립
+    // params
+    public void RandomizeSfx(float volume, params AudioClip [] clips)
     {
         int randomIndex = Random.Range(0, clips.Length);
         float randomPitch = Random.Range(lowPitRange, highPitRange);
 
-        efxSource.pitch = randomPitch;
-        efxSource.clip = clips[randomIndex];
-        efxSource.Play();
+        for (int i = 0; i < efxSource.Length; i++)
+        {
+            if (efxSource[i].isPlaying)
+                continue;
+
+            efxSource[i].pitch = randomPitch;
+            efxSource[i].clip = clips[randomIndex];
+            efxSource[i].volume = volume;
+            efxSource[i].Play();
+            break;
+        }
     }
 }

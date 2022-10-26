@@ -3,21 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
+    public static WaitForSeconds waitSec = new WaitForSeconds(0.1f);
+
     public float levelStartDelay = 2f;
-    public float turnDelay = .1f;
     public static GameManager instance = null;
+    
     public BoardManager boardScript;
+
+    
     public int playerEnergyPoints = 100;
     public int score = 0;
     public int level = 1;
+    public int boomCount = 3;
 
     [HideInInspector] public bool playersTurn = true;
 
-    private Text levelText;
-    private Text conText;
+    private TextMeshProUGUI levelText;
     private GameObject levelImage;
     private GameObject continueImage;
     private bool lastLevel = false;
@@ -25,8 +30,12 @@ public class GameManager : MonoBehaviour
     private bool enemiesMoving;
     private bool doingSetup;
 
+    private Vector3 nowEnemyPos;
+
     void Awake()
     {
+        Application.targetFrameRate = 60;
+
         if (instance == null)
             instance = this;
         else if (instance != this)
@@ -68,8 +77,7 @@ public class GameManager : MonoBehaviour
         doingSetup = true;
 
         levelImage = GameObject.Find("LevelImage");
-        levelText = GameObject.Find("LevelText").GetComponent<Text>();
-
+        levelText = GameObject.Find("LevelText").GetComponent<TextMeshProUGUI>();
 
         if (continueImage == null)
         {
@@ -96,6 +104,10 @@ public class GameManager : MonoBehaviour
     {
         score *= (int)Mathf.Log(level, 2f);
         levelText.text = "Entered the " + level + "F\nTotalScore : " + score;
+
+        // 스코어 저장
+        //
+
         levelImage.SetActive(true);
         continueImage.SetActive(true);
         enabled = false;
@@ -105,6 +117,7 @@ public class GameManager : MonoBehaviour
     {
         if (playersTurn || enemiesMoving || doingSetup)
             return;
+
         StartCoroutine(MoveEnemies());
     }
 
@@ -113,23 +126,23 @@ public class GameManager : MonoBehaviour
         enemies.Add(script);
     }
 
-
     IEnumerator MoveEnemies()
     {
         enemiesMoving = true;
         
-        yield return new WaitForSeconds(turnDelay);
+        yield return waitSec;
 
         if (enemies.Count == 0)
-        {
-            yield return new WaitForSeconds(turnDelay);
-        }
-        
+            yield return waitSec;
+
         for (int i = 0; i < enemies.Count; i++)
         {
+            if (enemies[i].doubleMove)
+                enemies[i].MoveEnemy();
+
             enemies[i].MoveEnemy();
-            
-            yield return new WaitForSeconds(enemies[i].moveTime);
+
+            yield return null;
         }
         playersTurn = true;
         enemiesMoving = false;

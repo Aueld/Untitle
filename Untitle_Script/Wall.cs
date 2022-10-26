@@ -4,27 +4,48 @@ using UnityEngine;
 
 public class Wall : MonoBehaviour
 {
-    //public Sprite dmgSprite;
+    [SerializeField] private ParticleSystem particle; 
+
+    // 벽 체력
     public int hp = 4;
-    public AudioClip chopSound1;
-    public AudioClip chopSound2;
 
+    // 벽 히트 사운드
+    public AudioClip chopSound;
+
+    // 벽 애니메이터
     private Animator animator;
-    //private SpriteRenderer spriteRenderer;
+    private CameraShake cameraShake;
 
-    void Awake()
+    private void Awake()
     {
         animator = GetComponent<Animator>();
-        //spriteRenderer = GetComponent<SpriteRenderer>();
+        cameraShake = Camera.main.GetComponent<CameraShake>();
     }
 
-    public void DamageWall(int loss)
+    // 벽 데미지
+    public bool DamageWall(int loss)
     {
-        SoundManager.instance.RandomizeSfx(chopSound1, chopSound2);
+        particle.Play();
+        SoundManager.instance.RandomizeSfx(0.75f, chopSound, chopSound);
         animator.SetTrigger("Block");
-        //spriteRenderer.sprite = dmgSprite;
+
         hp -= loss;
+
         if (hp <= 0)
+        {
+            cameraShake.ShakeForTimeAdd(0.6f);
             gameObject.SetActive(false);
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool BoomWall()
+    {
+        particle.Play();
+        cameraShake.ShakeForTimeAdd(0.6f);
+        gameObject.SetActive(false);
+        return false;
     }
 }

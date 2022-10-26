@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Enemy : MovingObject
 {
+    public bool doubleMove;
+
+    public int HP;
     public int playerDamage;
     public AudioClip enemyAttack1;
     public AudioClip enemyAttack2;
@@ -12,20 +15,15 @@ public class Enemy : MovingObject
     private Transform target;
     private bool skipMove;
     private Vector2 v1 = new Vector2(1000, 1000);
-
-
+    private CameraShake cameraShake;
+    
     protected override void Start()
     {
         GameManager.instance.AddEnemyToList(this);
         animator = GetComponent<Animator>();
+        cameraShake = Camera.main.GetComponent<CameraShake>();
         target = GameObject.FindGameObjectWithTag("Player").transform;
         base.Start();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     protected override void AttemptMove<T>(int xDir, int yDir)
@@ -50,35 +48,91 @@ public class Enemy : MovingObject
         else
             xDir = target.position.x > transform.position.x ? 1 : -1;
 
-        if((int)(target.position.x) == (int)(transform.position.x) && (int)(target.position.y) == (int)(transform.position.y))
+        // 잡아먹기
+        if ((int)(target.position.x) == (int)(transform.position.x)
+            && (int)(target.position.y) == (int)(transform.position.y))
         {
-            //gameObject.SetActive(false);
             gameObject.transform.position = v1;
         }
 
+        Collider2D[] cols = Physics2D.OverlapCircleAll(transform.position, 1f);
+        Collider2D targetCol = null;
+
+        if (cols.Length > 0)
+        {
+            for (int i = 0; i < cols.Length; i++)
+            {
+                if (cols[i].CompareTag("Player"))
+                {
+                    targetCol = cols[i];
+                    break;
+                }
+                else
+                    targetCol = null;
+            }
+        }
+
+        if (targetCol != null)
             AttemptMove<Player>(xDir, yDir);
+        else
+            AttemptMove<Wall>(xDir, yDir);
     }
 
-    protected void attackInvoke()
+    public Vector3 GetPosition()
+    {
+        return gameObject.transform.position;
+    }
+
+    public int IsHit()
+    {
+        HP--;
+
+        if (HP < 0)
+        {
+            cameraShake.ShakeForTimeAdd(1.2f);
+            AttackInvoke();
+            return 10;
+        }
+
+        return 0;
+    }
+
+    public void IsBoom()
+    {
+        gameObject.transform.position = v1;
+    }
+
+    protected void AttackInvoke()
     {
         gameObject.transform.position = v1;
     }
 
     protected override void OnCantMove<T>(T component)
     {
-        Player hitPlayer = component as Player;
-        animator.SetTrigger("enemyAttack");
-        hitPlayer.LoseFood(playerDamage);
-        if (gameObject.name == "Enemy2(Clone)")
+        if (component as Player)
         {
-            SoundManager.instance.RandomizeSfx(enemyAttack2, enemyAttack2);
-            //gameObject.SetActive(false);
-            Invoke("attackInvoke", 0.15f);
-            
+            Player hitPlayer = component as Player;
+
+            animator.SetTrigger("enemyAttack");
+
+            hitPlayer.LoseEnergy(playerDamage);
+
+            if (gameObject.name == "Enemy2(Clone)")
+            {
+                SoundManager.instance.RandomizeSfx(0.75f, enemyAttack2, enemyAttack2);
+                Invoke(nameof(AttackInvoke), 0.15f);
+            }
+            else
+                SoundManager.instance.RandomizeSfx(0.75f, enemyAttack1, enemyAttack1);
         }
-        else
-            SoundManager.instance.RandomizeSfx(enemyAttack1, enemyAttack1);
+        if (component as Wall)
+        {
+            Wall wall = component as Wall;
+
+            animator.SetTrigger("enemyAttack");
+            SoundManager.instance.RandomizeSfx(0.75f, enemyAttack1, enemyAttack1);
+
+            wall.DamageWall(playerDamage / 5);
+        }
     }
-
-
 }
